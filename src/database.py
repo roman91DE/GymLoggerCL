@@ -9,10 +9,10 @@ class DatabaseFacility:
     def __init__(self) -> None:
         
         if not DatabaseFacility.databaseExists():
-            DatabaseFacility.initNewDB()
+            self.initNewDB()
 
         
-
+    @staticmethod
     def databaseExists() -> bool:
         """Checks if an valid sqlite database has already been instantiated at ../database"""
         files: List[str] = listdir("../database")
@@ -36,6 +36,5 @@ class DatabaseFacility:
         
         return True
 
-
-    def initNewDB():
+    def initNewDB(self):
         pass

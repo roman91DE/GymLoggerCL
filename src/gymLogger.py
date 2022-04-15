@@ -5,13 +5,15 @@ import utilities
 
 
 class GymLogger:
-    def __init__(self) -> None:
+    def __init__(self, DEBUGMODE=False) -> None:
         self.workouts = utilities.parseWorkouts()
         self.printingFacility = PrintingFacility()
         self.databaseFacility = DatabaseFacility()
 
-        self.printingFacility.workouts(self.workouts)
-        print("EXISTS?", self.databaseFacility.databaseExists())
+        if DEBUGMODE:
+            
+            self.printingFacility.workouts(self.workouts)
+            print("EXISTS?", self.databaseFacility.databaseExists())
 
 
     def run(self):
