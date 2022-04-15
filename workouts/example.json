@@ -1,0 +1,14 @@
+{
+    "Push-Ups": {
+        "sets": 3,
+        "reps": 12
+    },
+    "Pull-Ups": {
+        "sets": 3,
+        "reps": 8
+    },
+    "Sit-Ups": {
+        "sets": 2,
+        "reps": 15
+    }
+}
