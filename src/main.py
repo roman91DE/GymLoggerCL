@@ -4,5 +4,5 @@ from gymLogger import GymLogger
 
 if __name__ == "__main__":
     
-    program = GymLogger(DEBUGMODE=True)
+    program = GymLogger(userprofile="roman", DEBUGMODE=True)
     program.run()

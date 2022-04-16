@@ -4,37 +4,58 @@ from sys import stderr
 from typing import List
 
 
-class DatabaseFacility:
+class DatabaseManager:
 
-    def __init__(self) -> None:
-        
-        if not DatabaseFacility.databaseExists():
+    def __init__(self, user_profile: str) -> None:
+        """Basic setup  and initialization of Object"""
+
+        self.user_profile: str = user_profile
+        self.db_path:str = "__INVALID__"
+
+        if not self.databaseExists():
             self.initNewDB()
-
+        else:
+            self.connection = sqlite3.connect(self.db_path)
+            self.cursor = self.connection.cursor()
         
-    @staticmethod
-    def databaseExists() -> bool:
+    def databaseExists(self) -> bool:
         """Checks if an valid sqlite database has already been instantiated at ../database"""
-        files: List[str] = listdir("../database")
+        files: List[str] = listdir("database")
 
         if len(files) == 0:
             return False
 
-        if len(files) > 1:
-            print(f"Error: Multiple Files <{files}> exist at database directory! Clean it up manually!", file=stderr)
-            raise RuntimeError
-
-        elif not files[0].lower().endswith((".sqlite3", ".sqlite", ".db")):
+        elif len(files) > 0:
+            for file in files:
+                if file.startswith(f"{self.user_profile}.sqlite3"):
+                    self.db_path = f"database/{file}"
+        else:
             return False
 
         try:
-            sqlite3.connect(f'file:{files[0]}?mode=rw', uri=True)   # Checks if file is really a useable sqlite db
-            
+            sqlite3.connect(f'file:{self.db_path}?mode=rw', uri=True)   # Checks if file is really a useable sqlite db
+            return True
+
         except sqlite3.OperationalError:
-            print(f"Warning: Database File <{files}> exists but connection failed!", file=stderr)
+            print(f"Warning: Database File <{self.db_path}> exists but connection failed!", file=stderr)
             return False
         
-        return True
+        
 
     def initNewDB(self):
-        pass
+        """initializes a new sqlite database to track workouts"""
+        self.connection = sqlite3.connect(f"database/{self.user_profile}.sqlite3")
+        self.cursor = self.connection.cursor()
+
+        SQL_CREATE_CMD = """CREATE TABLE gym_log(
+            timestamp INTEGER,
+            excercise TEXT,
+            rep_scheme TEXT,
+            weight_scheme TEXT,
+            total_weight REAL
+        )"""
+
+        self.cursor.execute(SQL_CREATE_CMD)
+        self.connection.commit()
+
+        

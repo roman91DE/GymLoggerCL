@@ -1,9 +1,8 @@
-import imp
 from pprint import pprint
 from typing import List, Dict
 
 
-class PrintingFacility:
+class PrintingManager:
 
     def workouts(self, workouts: List[Dict]) -> None:
         """Pretty prints the enumerated list of workouts"""
