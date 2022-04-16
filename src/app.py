@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sqlite3
+import sqlite3>
 from os import listdir, makedirs
 from sys import stderr
 from enum import Enum
@@ -78,12 +78,13 @@ class Application:
         """Check if required directories are present and create if not"""
         REQUIRED_DIRS = (
             "data",
+            "plots",
         )
         PWD_DIRS = listdir()
 
         for DIR in PWD_DIRS:
             if not DIR in REQUIRED_DIRS:
-                makedirs(DIR)
+                makedirs(f"{DIR}")
 
  
 
@@ -166,5 +167,5 @@ if __name__ == "__main__":
     except Application.KnownError:
         print(f"Error - Main Application was shutdown for Safety!", file=stderr)
 
-    except:
-        print(f"Error - Something unexpected went wrong!", file=stderr)
+    # except:
+       #print(f"Error - Something unexpected went wrong!", file=stderr)
