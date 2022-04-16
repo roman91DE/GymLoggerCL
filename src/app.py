@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import sqlite3
-from os import listdir
+from os import listdir, makedirs
 from sys import stderr
 from enum import Enum
-from typing import Dict
+from typing import Dict, Tuple
 from json import load as jsonload
 from time import sleep
 
@@ -32,13 +32,18 @@ class Application:
         QUIT = 10
 
     def __init__(self) -> None:
+
+        Application.__manageDirectories()
+
         self.userSelection: Application.MainMenuSelection = (
             Application.MainMenuSelection.INIT
         )
+        
         self.dataManager: DataManager = DataManager()
-
         self.run()
 
+    
+    
     def run(self):
         while self.userSelection != Application.MainMenuSelection.QUIT:
             sleep(1)
@@ -67,7 +72,20 @@ class Application:
 
     def backup_to_remote(self):
         pass
+    
+    @staticmethod
+    def __manageDirectories() -> None:
+        """Check if required directories are present and create if not"""
+        REQUIRED_DIRS = (
+            "data",
+        )
+        PWD_DIRS = listdir()
 
+        for DIR in PWD_DIRS:
+            if not DIR in REQUIRED_DIRS:
+                makedirs(DIR)
+
+ 
 
 class DataManager:
     """Manages all backend related data actions for the main Application"""
