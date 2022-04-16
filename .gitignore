@@ -2,8 +2,5 @@
 
 .DS_Store
 
-workouts/*
-!workouts/example.json
-
-db/*
+data/*
 
