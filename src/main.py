@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 
+# external:
+from sys import argv
+
+# internal:
 from ioManager import IOManager
 from dbManager import DatabaseManager
 from utilManager import UtilityManager
-
 
 
 class Main:
@@ -18,13 +21,8 @@ class Main:
             self.ioManager.print_workouts(self.utilityManager.parseWorkouts())
             print("EXISTS?", self.databaseManager.databaseExists())
 
-
     def run(self):
         pass
-
-
-
-
 
 
 if __name__ == "__main__":

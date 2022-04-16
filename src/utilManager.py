@@ -4,7 +4,6 @@ from json import load as jload
 
 
 class UtilityManager:
-
     @staticmethod
     def parseWorkouts() -> List[Dict]:
         """Parses all .json files in ../workouts and returns them as a set of python dictionaries"""
@@ -14,7 +13,7 @@ class UtilityManager:
 
         files = listdir("workouts")
         workouts = []
-        
+
         for file in files:
             workouts.append(parseFile(f"workouts/{file}"))
 
