@@ -19,8 +19,8 @@ class DatabaseManager:
             self.cursor = self.connection.cursor()
         
     def databaseExists(self) -> bool:
-        """Checks if an valid sqlite database has already been instantiated at ../database"""
-        files: List[str] = listdir("database")
+        """Checks if an valid sqlite database has already been instantiated at ../db"""
+        files: List[str] = listdir("db")
 
         if len(files) == 0:
             return False
@@ -28,7 +28,7 @@ class DatabaseManager:
         elif len(files) > 0:
             for file in files:
                 if file.startswith(f"{self.user_profile}.sqlite3"):
-                    self.db_path = f"database/{file}"
+                    self.db_path = f"db/{file}"
         else:
             return False
 
@@ -44,7 +44,7 @@ class DatabaseManager:
 
     def initNewDB(self):
         """initializes a new sqlite database to track workouts"""
-        self.connection = sqlite3.connect(f"database/{self.user_profile}.sqlite3")
+        self.connection = sqlite3.connect(f"db/{self.user_profile}.sqlite3")
         self.cursor = self.connection.cursor()
 
         SQL_CREATE_CMD = """CREATE TABLE gym_log(

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-from printer import PrintingManager
-from database import DatabaseManager
-from utility import UtilityManager
+from ioManager import IOManager
+from dbManager import DatabaseManager
+from utilManager import UtilityManager
 
 
 
@@ -10,12 +10,12 @@ class Main:
     def __init__(self, userprofile: str, DEBUGMODE=False) -> None:
 
         self.utilityManager = UtilityManager()
-        self.printingManager = PrintingManager()
+        self.ioManager = IOManager()
         self.databaseManager = DatabaseManager(userprofile)
 
         if DEBUGMODE:
 
-            self.printingManager.workouts(self.utilityManager.parseWorkouts())
+            self.ioManager.print_workouts(self.utilityManager.parseWorkouts())
             print("EXISTS?", self.databaseManager.databaseExists())
 
 

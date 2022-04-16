@@ -1,3 +1,9 @@
+.mypy_cache/
+
+.DS_Store
+
 workouts/*
 !workouts/example.json
-database/*.sqlite3
+
+db/*
+
