@@ -5,7 +5,7 @@ from os import listdir, makedirs
 from os.path import exists
 from sys import stderr
 from enum import Enum
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from json import load as jsonload
 from time import sleep
 
@@ -53,17 +53,17 @@ class Application:
         self.dataManager: DataManager = DataManager()
         self.run()
 
-    def run(self):
+    def run(self) -> None:
         Application.__print_logo()
         while self.userSelection != Application.MainMenuSelection.QUIT:
             sleep(0.25)
             self.userSelection = self.run_main_menu()
             Application.SELECTION_MAP[self.userSelection](self)
 
-    def run_main_menu(self):
+    def run_main_menu(self) -> MainMenuSelection:
         """Display the main menu, prompts User and returns his Selection"""
 
-        def __printOptions():
+        def printOptions() -> None:
             print(
                 f"""
 Main Menu Selections:
@@ -76,43 +76,43 @@ Main Menu Selections:
             """
             )
 
-        def __promptUser() -> Application.MainMenuSelection:
+        def promptUser() -> Application.MainMenuSelection:
             try:
                 BUF = int(input("Enter Number: "))
                 return Application.MainMenuSelection(BUF)
             except ValueError:
                 print("Invalid Input, please try again!")
-                return __promptUser()
+                return promptUser()
 
-        __printOptions()
-        return __promptUser()
+        printOptions()
+        return promptUser()
 
-    def list_excercises(self):
+    def list_excercises(self) -> None:
         print("Not implemented yet...")
 
-    def add_excercise(self):
+    def add_excercise(self) -> None:
         print("Not implemented yet...")
 
-    def select_excercise(self):
+    def select_excercise(self) -> None:
         print("Not implemented yet...")
 
-    def add_record(self):
+    def add_record(self) -> None:
         print("Not implemented yet...")
 
-    def list_records(self):
+    def list_records(self) -> None:
         print("Not implemented yet...")
 
-    def export_records(self):
+    def export_records(self) -> None:
         print("Not implemented yet...")
 
-    def backup_to_remote(self):
+    def backup_to_remote(self) -> None:
         print("Not implemented yet...")
 
     @staticmethod
     def __manageDirectories() -> None:
         """Check if required directories are present and create if not"""
-        REQUIRED_DIRS = ("data", "plots", "logo")
-        PWD_DIRS = listdir()
+        REQUIRED_DIRS: List[str] = ["data", "plots", "logo"]
+        PWD_DIRS: List[str] = listdir()
 
         for DIR in REQUIRED_DIRS:
             if not DIR in PWD_DIRS:
@@ -136,15 +136,15 @@ class DataManager:
     def __init__(self) -> None:
         """
         On first Call it creates data/db.sqlite3 and adds all excercises defined in data/excercises.json to the main table
-        Establishes both a Connection and a Cursor to the SQLite Database
+        Establishes both a Connection and a Cursor to the SQLite Database as member variables
         """
         self.relativeDatabasePath: str = "data/db.sqlite3"
         self.relativeExcercisePath: str = "data/excercises.json"
 
         if not self.__databaseExists():
-            self.__initNewDB()  # .. also establishes a connection to the new database
+            self.__initNewDB()  # ... also establishes a connection to the new database
 
-        else:  # just connect to existing database
+        else:  # ... just connect to existing database
             self.connection = sqlite3.connect(self.relativeDatabasePath)
             self.cursor = self.connection.cursor()
 
@@ -167,7 +167,7 @@ class DataManager:
             )
             raise Application.KnownError
 
-    def __initNewDB(self):
+    def __initNewDB(self) -> None:
         """initializes a new sqlite database to track records"""
         self.connection = sqlite3.connect(self.relativeDatabasePath)
         self.cursor = self.connection.cursor()
@@ -211,7 +211,7 @@ if __name__ == "__main__":
         Application()
 
     except Application.KnownError:
-        print(f"Error - Main Application was shutdown for Safety!", file=stderr)
+        print(f"Error - Main Application was shutdown!", file=stderr)
 
     except Exception as UnknownError:
         print(
