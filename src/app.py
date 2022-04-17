@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-import sqlite3>
+import sqlite3
 from os import listdir, makedirs
+from os.path import exists
 from sys import stderr
 from enum import Enum
 from typing import Dict, Tuple
@@ -45,12 +46,18 @@ class Application:
     
     
     def run(self):
+        self.print_logo()
         while self.userSelection != Application.MainMenuSelection.QUIT:
             sleep(1)
             self.main_menu()
 
     def main_menu(self):
         pass
+    
+    def print_logo(self):
+        with open("logo/logo.txt", mode="r") as fstream:
+            for line in fstream:
+                print(line) 
 
     def list_excercises(self):
         pass
@@ -82,8 +89,8 @@ class Application:
         )
         PWD_DIRS = listdir()
 
-        for DIR in PWD_DIRS:
-            if not DIR in REQUIRED_DIRS:
+        for DIR in REQUIRED_DIRS:
+            if not DIR in  PWD_DIRS:
                 makedirs(f"{DIR}")
 
  
@@ -147,6 +154,10 @@ class DataManager:
         parses all excercises described in data/excercises.json and adds them to the database table <excercises> if they dont already exist
         """
 
+        if not exists(self.relativeExcercisePath):
+            print(f"Info: The File <data/excercises.json> does not exist", file=stderr)
+            return
+
         excercises: Dict = jsonload(open(self.relativeExcercisePath))
 
         SQL_COMMAND = (
@@ -163,9 +174,10 @@ if __name__ == "__main__":
 
     try:
         Application()
-
+                                                                              
     except Application.KnownError:
         print(f"Error - Main Application was shutdown for Safety!", file=stderr)
 
-    # except:
-       #print(f"Error - Something unexpected went wrong!", file=stderr)
+    except Exception as Err:
+       print(f"Error - Something unexpected went wrong! Error: {Err}", file=stderr)
+ 
