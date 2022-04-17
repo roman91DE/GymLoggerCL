@@ -19,17 +19,20 @@ class Application:
 
         pass
 
-    class MainMenuSelection(Enum):
-        """Represents Users Selection for the Main Menu"""
-
-        INIT = 0
-        LIST_EXCERCISES = 1
-        ADD_EXCERCISE = 2
-        SELECT_EXCERCISE = 3
-        ADD_RECORD = 4
-        LIST_RECORDS = 5
-        EXPORT_RECORDS = 6
-        QUIT = 10
+    MainMenuSelection = Enum(
+        "MainMenuSelection",
+        """
+        INIT
+        LIST_EXCERCISES,
+        ADD_EXCERCISE,
+        SELECT_EXCERCIS,
+        ADD_RECORD,
+        LIST_RECORDS ,
+        EXPORT_RECORDS,
+        QUIT
+        """,
+        start=0
+    )
 
     def __init__(self) -> None:
         self.userSelection: Application.MainMenuSelection = (
