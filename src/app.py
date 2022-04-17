@@ -31,6 +31,17 @@ class Application:
         EXPORT_RECORDS = 5
         QUIT = 10
 
+    """ SELECTION_MAP is used to map each MainMenuSelection to the according class method of the Application """
+    SELECTION_MAP: Dict = {
+        MainMenuSelection.INIT: lambda app: None,
+        MainMenuSelection.LIST_EXCERCISES: lambda app: app.list_excercises(),
+        MainMenuSelection.ADD_EXCERCISE: lambda app: app.add_excercise(),
+        MainMenuSelection.ADD_RECORD: lambda app: app.add_record(),
+        MainMenuSelection.LIST_RECORDS: lambda app: app.list_records(),
+        MainMenuSelection.EXPORT_RECORDS: lambda app: app.export_records(),
+        MainMenuSelection.QUIT: lambda app: None,
+    }
+
     def __init__(self) -> None:
 
         Application.__manageDirectories()
@@ -45,54 +56,57 @@ class Application:
     def run(self):
         Application.__print_logo()
         while self.userSelection != Application.MainMenuSelection.QUIT:
-            sleep(1)
-            self.main_menu()
+            sleep(0.25)
+            self.userSelection = self.run_main_menu()
+            Application.SELECTION_MAP[self.userSelection](self)
 
-    def main_menu(self):
-        """Display the main menu, prompts and returns Users Selection"""
-        def printOptions():
-            print(f"""
+    def run_main_menu(self):
+        """Display the main menu, prompts User and returns his Selection"""
+
+        def __printOptions():
+            print(
+                f"""
 Main Menu Selections:
-    {Application.MainMenuSelection.LIST_EXCERCISES.value:<3} - List all available Excercises
-    {Application.MainMenuSelection.ADD_EXCERCISE.value:<3} - Add new Excercise
-    {Application.MainMenuSelection.ADD_RECORD.value:<3} - Add new Record
-    {Application.MainMenuSelection.LIST_RECORDS.value:<3} - List Record
-    {Application.MainMenuSelection.EXPORT_RECORDS.value:<3} - Export Records
-    {Application.MainMenuSelection.QUIT.value:<3} - Quit
-            """)
-    
+\t{Application.MainMenuSelection.LIST_EXCERCISES.value:<3} - List all available Excercises
+\t{Application.MainMenuSelection.ADD_EXCERCISE.value:<3} - Add new Excercise
+\t{Application.MainMenuSelection.ADD_RECORD.value:<3} - Add new Record
+\t{Application.MainMenuSelection.LIST_RECORDS.value:<3} - List Record
+\t{Application.MainMenuSelection.EXPORT_RECORDS.value:<3} - Export Records
+\t{Application.MainMenuSelection.QUIT.value:<3} - Quit
+            """
+            )
 
-        def promptUser() -> Application.MainMenuSelection:
+        def __promptUser() -> Application.MainMenuSelection:
             try:
                 BUF = int(input("Enter Number: "))
                 return Application.MainMenuSelection(BUF)
             except ValueError:
                 print("Invalid Input, please try again!")
-                return promptUser()
-            
-        printOptions()
-        return promptUser()
+                return __promptUser()
+
+        __printOptions()
+        return __promptUser()
 
     def list_excercises(self):
-        pass
+        print("Not implemented yet...")
 
     def add_excercise(self):
-        pass
+        print("Not implemented yet...")
 
     def select_excercise(self):
-        pass
+        print("Not implemented yet...")
 
     def add_record(self):
-        pass
+        print("Not implemented yet...")
 
     def list_records(self):
-        pass
+        print("Not implemented yet...")
 
     def export_records(self):
-        pass
+        print("Not implemented yet...")
 
     def backup_to_remote(self):
-        pass
+        print("Not implemented yet...")
 
     @staticmethod
     def __manageDirectories() -> None:
@@ -200,4 +214,7 @@ if __name__ == "__main__":
         print(f"Error - Main Application was shutdown for Safety!", file=stderr)
 
     except Exception as UnknownError:
-        print(f"Error - Something unexpected went wrong! Error: {UnknownError}", file=stderr)
+        print(
+            f"Error - Something unexpected went wrong! Error: {UnknownError}",
+            file=stderr,
+        )
