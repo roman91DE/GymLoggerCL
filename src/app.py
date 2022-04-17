@@ -26,10 +26,9 @@ class Application:
         INIT = 0
         LIST_EXCERCISES = 1
         ADD_EXCERCISE = 2
-        SELECT_EXCERCISE = 3
-        ADD_RECORD = 4
-        LIST_RECORDS = 5
-        EXPORT_RECORDS = 6
+        ADD_RECORD = 3
+        LIST_RECORDS = 4
+        EXPORT_RECORDS = 5
         QUIT = 10
 
     def __init__(self) -> None:
@@ -39,25 +38,40 @@ class Application:
         self.userSelection: Application.MainMenuSelection = (
             Application.MainMenuSelection.INIT
         )
-        
+
         self.dataManager: DataManager = DataManager()
         self.run()
 
-    
-    
     def run(self):
-        self.print_logo()
+        Application.__print_logo()
         while self.userSelection != Application.MainMenuSelection.QUIT:
             sleep(1)
             self.main_menu()
 
     def main_menu(self):
-        pass
+        """Display the main menu, prompts and returns Users Selection"""
+        def printOptions():
+            print(f"""
+Main Menu Selections:
+    {Application.MainMenuSelection.LIST_EXCERCISES.value:<3} - List all available Excercises
+    {Application.MainMenuSelection.ADD_EXCERCISE.value:<3} - Add new Excercise
+    {Application.MainMenuSelection.ADD_RECORD.value:<3} - Add new Record
+    {Application.MainMenuSelection.LIST_RECORDS.value:<3} - List Record
+    {Application.MainMenuSelection.EXPORT_RECORDS.value:<3} - Export Records
+    {Application.MainMenuSelection.QUIT.value:<3} - Quit
+            """)
     
-    def print_logo(self):
-        with open("logo/logo.txt", mode="r") as fstream:
-            for line in fstream:
-                print(line) 
+
+        def promptUser() -> Application.MainMenuSelection:
+            try:
+                BUF = int(input("Enter Number: "))
+                return Application.MainMenuSelection(BUF)
+            except ValueError:
+                print("Invalid Input, please try again!")
+                return promptUser()
+            
+        printOptions()
+        return promptUser()
 
     def list_excercises(self):
         pass
@@ -79,28 +93,35 @@ class Application:
 
     def backup_to_remote(self):
         pass
-    
+
     @staticmethod
     def __manageDirectories() -> None:
         """Check if required directories are present and create if not"""
-        REQUIRED_DIRS = (
-            "data",
-            "plots",
-        )
+        REQUIRED_DIRS = ("data", "plots", "logo")
         PWD_DIRS = listdir()
 
         for DIR in REQUIRED_DIRS:
-            if not DIR in  PWD_DIRS:
+            if not DIR in PWD_DIRS:
                 makedirs(f"{DIR}")
 
- 
+    @staticmethod
+    def __print_logo() -> None:
+        """Prints the content of the text file logo/logo.txt"""
+        try:
+            with open("logo/logo.txt", mode="r") as fstream:
+                for line in fstream:
+                    print(line)
+        except FileNotFoundError:
+            print("GymLogger - CL")
+            print(f"Warning: Logo File at logo/logo.txt not found", file=stderr)
+
 
 class DataManager:
     """Manages all backend related data actions for the main Application"""
 
     def __init__(self) -> None:
         """
-        On first Call it create data/db.sqlite3 and adds all excercises defined in data/excercises.json to the main table
+        On first Call it creates data/db.sqlite3 and adds all excercises defined in data/excercises.json to the main table
         Establishes both a Connection and a Cursor to the SQLite Database
         """
         self.relativeDatabasePath: str = "data/db.sqlite3"
@@ -174,10 +195,9 @@ if __name__ == "__main__":
 
     try:
         Application()
-                                                                              
+
     except Application.KnownError:
         print(f"Error - Main Application was shutdown for Safety!", file=stderr)
 
-    except Exception as Err:
-       print(f"Error - Something unexpected went wrong! Error: {Err}", file=stderr)
- 
+    except Exception as UnknownError:
+        print(f"Error - Something unexpected went wrong! Error: {UnknownError}", file=stderr)
