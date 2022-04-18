@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import imp
 import sqlite3
 from os import listdir, makedirs
 from os.path import exists
@@ -8,6 +9,7 @@ from enum import Enum
 from typing import Dict, Tuple, List
 from json import load as jsonload
 from time import sleep
+from pprint import pprint
 
 
 class Application:
@@ -15,7 +17,7 @@ class Application:
     Application is responsible for the main loop, IO and the delegation of tasks to its DataManager
     """
 
-    class KnownError(RuntimeError):
+    class ConsideredError(RuntimeError):
         """An Error that has been taken into account by the developer"""
 
         pass
@@ -59,6 +61,8 @@ class Application:
             sleep(0.25)
             self.userSelection = self.run_main_menu()
             Application.SELECTION_MAP[self.userSelection](self)
+        else:
+            self.dataManager.shutdownDB()
 
     def run_main_menu(self) -> MainMenuSelection:
         """Display the main menu, prompts User and returns his Selection"""
@@ -66,13 +70,17 @@ class Application:
         def printOptions() -> None:
             print(
                 f"""
+
 Main Menu Selections:
+----------------------------
 \t{Application.MainMenuSelection.LIST_EXCERCISES.value:<3} - List all available Excercises
 \t{Application.MainMenuSelection.ADD_EXCERCISE.value:<3} - Add new Excercise
 \t{Application.MainMenuSelection.ADD_RECORD.value:<3} - Add new Record
 \t{Application.MainMenuSelection.LIST_RECORDS.value:<3} - List Record
 \t{Application.MainMenuSelection.EXPORT_RECORDS.value:<3} - Export Records
 \t{Application.MainMenuSelection.QUIT.value:<3} - Quit
+
+
             """
             )
 
@@ -88,16 +96,40 @@ Main Menu Selections:
         return promptUser()
 
     def list_excercises(self) -> None:
-        print("Not implemented yet...")
+        """prints all excercises that have been added to the database"""
+        print(
+            f"""
+All available Excercises:
+------------------------------
+"""
+        )
+        for (id, name, description) in self.dataManager.getAllExcercises():
+            print(f"#{id:<3}\t{name}\n\t-{description}\n")
 
     def add_excercise(self) -> None:
-        print("Not implemented yet...")
+        """read a new excercise from user input and add it to the database"""
+        try:
+            NAME = input("Enter a name for the new excercise:")
+            DESCRIPTION = input(f"Enter a short Description for {NAME}: ")
+        except ValueError:
+            print(f"Error: Invalid input, please try again!", file=stderr)
+            self.add_excercise()
 
-    def select_excercise(self) -> None:
-        print("Not implemented yet...")
+        self.dataManager.addNewExcercise(NAME, DESCRIPTION)
+
 
     def add_record(self) -> None:
-        print("Not implemented yet...")
+        EXCERCISE_ID = self.__select_excercise()
+        DATE_STR = 
+
+    def __select_excercise(self) -> int:
+        try:
+            return int(input("Select Excercise by its number: ")) 
+        except ValueError:
+            print(f"Error: Invalid Input, please select excercise by its integer index:")
+            return self.__select_excercise()
+    
+    print("Not implemented yet...")
 
     def list_records(self) -> None:
         print("Not implemented yet...")
@@ -150,6 +182,41 @@ class DataManager:
 
         self.__addExcercisesFromJSON()
 
+    def getAllExcercises(self) -> List[Tuple[int, str, str]]:
+        """Query Database for all available Excercses and return results"""
+
+        SQL_COMMAND = """
+        SELECT id, name, description FROM excercises
+        """
+        try:
+            self.cursor.execute(SQL_COMMAND)
+            return self.cursor.fetchall()
+
+        except sqlite3.OperationalError as Err:
+            print(
+                f"Database Operation Error: Failed to fetch results for Querry: {Err}/n",
+                file=stderr,
+            )
+            raise Application.ConsideredError
+
+    def addNewExcercise(self, name: str, description: str) -> None:
+        """Add a new excercise to the database"""
+
+        SQL_COMMAND = """
+        INSERT INTO excercises (name, description) VALUES (?, ?)
+        """
+        
+        try:
+            self.cursor.execute(SQL_COMMAND, (name, description))
+            self.connection.commit()
+
+        except sqlite3.OperationalError as Err:
+            print(
+                f"Database Operation Error: Failed to insert new Excercise: {Err}/n",
+                file=stderr,
+            )
+            raise Application.ConsideredError
+
     def __databaseExists(self) -> bool:
         """Check if an valid sqlite database exists at relativeDatabasePath"""
 
@@ -165,7 +232,7 @@ class DataManager:
                 f"Error: Database File <{self.relativeDatabasePath}> exists but connection failed!",
                 file=stderr,
             )
-            raise Application.KnownError
+            raise Application.ConsideredError
 
     def __initNewDB(self) -> None:
         """initializes a new sqlite database to track records"""
@@ -203,18 +270,23 @@ class DataManager:
             self.cursor.execute(SQL_COMMAND, (name, description))
 
         self.connection.commit()
+    
+    def shutdownDB(self) -> None:
+        self.cursor.close()
+        self.connection.close()
 
 
 if __name__ == "__main__":
 
+    Application()
     try:
         Application()
 
-    except Application.KnownError:
-        print(f"Error - Main Application was shutdown!", file=stderr)
+    except Application.ConsideredError as Err:
+        print(f"Error - Main Application was shutdown!\nError: {Err.with_traceback}", file=stderr)
 
     except Exception as UnknownError:
         print(
-            f"Error - Something unexpected went wrong! Error: {UnknownError}",
+            f"Error - Something unexpected went wrong! Error: {UnknownError}\n{UnknownError.with_traceback}",
             file=stderr,
         )
