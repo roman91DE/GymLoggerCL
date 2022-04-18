@@ -9,7 +9,7 @@ from typing import Dict, Tuple, List
 from json import load as jsonload
 from time import sleep
 from datetime import datetime
-import traceback
+from traceback import print_exc
 
 
 class Application:
@@ -31,6 +31,7 @@ class Application:
         ADD_RECORD = 3
         LIST_RECORDS = 4
         EXPORT_RECORDS = 5
+        BACKUP_REMOTE = 6
         QUIT = 10
 
     """ SELECTION_MAP is used to map each MainMenuSelection to the according class method of the Application """
@@ -41,6 +42,7 @@ class Application:
         MainMenuSelection.ADD_RECORD: lambda app: app.add_record(),
         MainMenuSelection.LIST_RECORDS: lambda app: app.list_records(),
         MainMenuSelection.EXPORT_RECORDS: lambda app: app.export_records(),
+        MainMenuSelection.BACKUP_REMOTE : lambda app: app.backup_to_remote(),
         MainMenuSelection.QUIT: lambda app: None,
     }
 
@@ -78,9 +80,8 @@ Main Menu Selections:
 \t{Application.MainMenuSelection.ADD_RECORD.value:<3} - Add new Record
 \t{Application.MainMenuSelection.LIST_RECORDS.value:<3} - List Record
 \t{Application.MainMenuSelection.EXPORT_RECORDS.value:<3} - Export Records
+\t{Application.MainMenuSelection. BACKUP_REMOTE.value:<3} - Backup Database to remote Host
 \t{Application.MainMenuSelection.QUIT.value:<3} - Quit
-
-
             """
             )
 
@@ -251,10 +252,8 @@ class DataManager:
         SQL_COMMAND = """
         INSERT INTO records (excercise_id, timestamp, weight, reps) VALUES (?, ?, ?, ?)
         """
-        for record in records:
-            sweight = str(record[0])    # weight as string
-            sreps = str(record[1])        # reps as string
-            self.cursor.execute(SQL_COMMAND, (excerciseID, datetime.now(), sweight, sreps))
+        for (weight, reps) in records:                  # single record: Tuple["weight":float, "reps": int]
+            self.cursor.execute(SQL_COMMAND, (excerciseID, datetime.now(), str(weight), str(reps)))
 
         self.connection.commit()
 
@@ -337,11 +336,11 @@ if __name__ == "__main__":
             f"Error - Main Application was shutdown!\nError: {Err.with_traceback}",
             file=stderr,
         )
-        traceback.print_exc()
+        print_exc(file=stderr)
 
     except Exception as UnknownError:
         print(
             f"Error - Something unexpected went wrong! Error: {UnknownError}\n{UnknownError.with_traceback}",
             file=stderr,
         )
-        traceback.print_exc()
+        print_exc(file=stderr)
