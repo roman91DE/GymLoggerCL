@@ -2,7 +2,7 @@
 
 from math import nan
 import sqlite3
-from os import listdir, makedirs, copy_file_range
+from os import listdir, makedirs
 from os.path import exists
 from sys import stderr
 from shutil import copyfile
@@ -185,8 +185,8 @@ Available Excercises:
         pass
 
     def backup_db_local(self) -> None:
+        print("Backup of Database will be written to the Directory ./backups/")
         self.dataManager.backupLocal()
-
 
     def backup_db_remote(self) -> None:
         print("Feature has not been implemented yet...")
@@ -367,7 +367,6 @@ class DataManager:
 
     def backupLocal(self) -> None:
         copyfile(self.relativeDatabasePath, f"backups/backup.sqlite3")
-
 
     def shutdownDB(self) -> None:
         self.cursor.close()
