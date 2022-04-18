@@ -158,7 +158,18 @@ All available Excercises:
             return self.__select_excercise()
 
     def list_records(self) -> None:
-        print("Not implemented yet...")
+        EXCERCISE_ID: int = self.__select_excercise()
+
+        records: List [Tuple [str, int, float] ] = self.dataManager.getRecordsForExcercise(EXCERCISE_ID)
+
+        print("\nTime\t\tRepetitions\tWeight\n------------------------------------------------")
+
+        for (timestamp, reps, weight) in records:
+            print(f"""{timestamp[:-7]:>10}\t{reps:>3}\t{weight:>4.2f}""")
+
+
+
+
 
     def export_records(self) -> None:
         print("Not implemented yet...")
@@ -224,6 +235,18 @@ class DataManager:
                 file=stderr,
             )
             raise Application.ConsideredError
+
+    def getRecordsForExcercise(self, excercise_id: int) -> List [Tuple [str, int, float] ]:    # return type?
+
+        SQL_COMMAND = """
+        SELECT timestamp, reps, weight 
+        FROM records 
+        WHERE (excercise_id=?) 
+        ORDER BY timestamp DESC
+        """
+        self.cursor.execute(SQL_COMMAND, (excercise_id,))
+        return self.cursor.fetchall()
+
 
     def addNewExcercise(self, name: str, description: str) -> None:
         """Insert new record for <name> to the table <excercise>"""
