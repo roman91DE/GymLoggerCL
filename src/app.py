@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from math import nan
 import sqlite3
 from os import listdir, makedirs
 from os.path import exists
