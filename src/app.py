@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
+from math import nan
 import sqlite3
-from os import listdir, makedirs
+from os import listdir, makedirs, copy_file_range
 from os.path import exists
 from sys import stderr
+from shutil import copyfile
 from enum import Enum
 from typing import Dict, Tuple, List
 from json import load as jsonload
@@ -30,24 +32,24 @@ class Application:
         ADD_EXCERCISE = 2
         ADD_RECORD = 3
         LIST_RECORDS = 4
-        EXPORT_RECORDS = 5
-        BACKUP_REMOTE = 6
+        BACKUP_DB_LOCAL = 5
+        BACKUP_DB_REMOTE = 6
         QUIT = 10
 
     """ SELECTION_MAP is used to map each MainMenuSelection to the according class method of the Application """
     SELECTION_MAP: Dict = {
-        MainMenuSelection.INIT: lambda app: None,
+        MainMenuSelection.INIT: lambda app: app.do_nothing(),
         MainMenuSelection.LIST_EXCERCISES: lambda app: app.list_excercises(),
         MainMenuSelection.ADD_EXCERCISE: lambda app: app.add_excercise(),
         MainMenuSelection.ADD_RECORD: lambda app: app.add_record(),
         MainMenuSelection.LIST_RECORDS: lambda app: app.list_records(),
-        MainMenuSelection.EXPORT_RECORDS: lambda app: app.export_records(),
-        MainMenuSelection.BACKUP_REMOTE: lambda app: app.backup_to_remote(),
-        MainMenuSelection.QUIT: lambda app: None,
+        MainMenuSelection.BACKUP_DB_LOCAL: lambda app: app.backup_db_local(),
+        MainMenuSelection.BACKUP_DB_REMOTE: lambda app: app.backup_db_remote(),
+        MainMenuSelection.QUIT: lambda app: app.do_nothing(),
     }
 
     def __init__(self) -> None:
-
+        """prepare and run the main application"""
         Application.__manageDirectories()
 
         self.userSelection: Application.MainMenuSelection = (
@@ -55,9 +57,10 @@ class Application:
         )
 
         self.dataManager: DataManager = DataManager()
-        self.run()
+        self.__run()
 
-    def run(self) -> None:
+    def __run(self) -> None:
+        """ run application's main loop """
         Application.__print_logo()
         while self.userSelection != Application.MainMenuSelection.QUIT:
             sleep(0.25)
@@ -70,6 +73,7 @@ class Application:
         """Display the main menu, prompts User and returns his Selection"""
 
         def printOptions() -> None:
+            """Prints all options for the main menu"""
             print(
                 f"""
 
@@ -79,13 +83,14 @@ Main Menu Selections:
 \t{Application.MainMenuSelection.ADD_EXCERCISE.value:<3} - Add new Excercise
 \t{Application.MainMenuSelection.ADD_RECORD.value:<3} - Add new Record
 \t{Application.MainMenuSelection.LIST_RECORDS.value:<3} - List Record
-\t{Application.MainMenuSelection.EXPORT_RECORDS.value:<3} - Export Records
-\t{Application.MainMenuSelection. BACKUP_REMOTE.value:<3} - Backup Database to remote Host
+\t{Application.MainMenuSelection.BACKUP_DB_LOCAL.value:<3} - Backup Database to local Folder
+\t{Application.MainMenuSelection. BACKUP_DB_REMOTE.value:<3} - Backup Database to remote Server
 \t{Application.MainMenuSelection.QUIT.value:<3} - Quit
             """
             )
 
         def promptUser() -> Application.MainMenuSelection:
+            """prompt the user to select an option from the main menu"""
             try:
                 BUF = int(input("Enter Number: "))
                 return Application.MainMenuSelection(BUF)
@@ -98,10 +103,11 @@ Main Menu Selections:
 
     def list_excercises(self) -> None:
         """prints all excercises that have been added to the database"""
+
         print(
             f"""
-All available Excercises:
-------------------------------
+Available Excercises:
+-------------------------
 """
         )
         for (id, name, description) in self.dataManager.getAllExcercises():
@@ -119,6 +125,7 @@ All available Excercises:
         self.dataManager.addNewExcercise(NAME, DESCRIPTION)
 
     def add_record(self) -> None:
+        """add new record(s) for the selected excercise to the database"""
         EXCERCISE_ID: int = self.__select_excercise()
         RECORDS: List[Tuple[float, int]] = []
 
@@ -148,6 +155,7 @@ All available Excercises:
         self.dataManager.addNewRecords(EXCERCISE_ID, RECORDS)
 
     def __select_excercise(self) -> int:
+        """prompt user to select an excercise by its id"""
         self.list_excercises()
         try:
             return int(input("Select Excercise by its number: "))
@@ -158,29 +166,35 @@ All available Excercises:
             return self.__select_excercise()
 
     def list_records(self) -> None:
+        """print all records for a user selected excercise"""
         EXCERCISE_ID: int = self.__select_excercise()
 
-        records: List [Tuple [str, int, float] ] = self.dataManager.getRecordsForExcercise(EXCERCISE_ID)
+        records: List[Tuple[str, int, float]] = self.dataManager.getRecordsForExcercise(
+            EXCERCISE_ID
+        )
 
-        print("\nTime\t\tRepetitions\tWeight\n------------------------------------------------")
+        print(
+            "\nTime\t\tRepetitions\tWeight\n------------------------------------------------"
+        )
 
         for (timestamp, reps, weight) in records:
             print(f"""{timestamp[:-7]:>10}\t{reps:>3}\t{weight:>4.2f}""")
 
+    def do_nothing(self) -> None:
+        """does nothing..."""
+        pass
+
+    def backup_db_local(self) -> None:
+        self.dataManager.backupLocal()
 
 
-
-
-    def export_records(self) -> None:
-        print("Not implemented yet...")
-
-    def backup_to_remote(self) -> None:
-        print("Not implemented yet...")
+    def backup_db_remote(self) -> None:
+        print("Feature has not been implemented yet...")
 
     @staticmethod
     def __manageDirectories() -> None:
-        """Check if required directories are present and create if not"""
-        REQUIRED_DIRS: List[str] = ["data", "plots", "logo"]
+        """Check if required directories are present and create them if they aren't"""
+        REQUIRED_DIRS: List[str] = ["data", "backups", "logo"]
         PWD_DIRS: List[str] = listdir()
 
         for DIR in REQUIRED_DIRS:
@@ -223,7 +237,8 @@ class DataManager:
         """Query Database for all available Excercses and return results"""
 
         SQL_COMMAND = """
-        SELECT id, name, description FROM excercises
+        SELECT id, name, description 
+        FROM excercises
         """
         try:
             self.cursor.execute(SQL_COMMAND)
@@ -236,7 +251,9 @@ class DataManager:
             )
             raise Application.ConsideredError
 
-    def getRecordsForExcercise(self, excercise_id: int) -> List [Tuple [str, int, float] ]:    # return type?
+    def getRecordsForExcercise(
+        self, excercise_id: int
+    ) -> List[Tuple[str, int, float]]:  # return type?
 
         SQL_COMMAND = """
         SELECT timestamp, reps, weight 
@@ -247,12 +264,12 @@ class DataManager:
         self.cursor.execute(SQL_COMMAND, (excercise_id,))
         return self.cursor.fetchall()
 
-
     def addNewExcercise(self, name: str, description: str) -> None:
         """Insert new record for <name> to the table <excercise>"""
 
         SQL_COMMAND = """
-        INSERT INTO excercises (name, description) VALUES (?, ?)
+        INSERT INTO excercises (name, description) 
+        VALUES (?, ?)
         """
 
         try:
@@ -266,12 +283,12 @@ class DataManager:
             )
             raise Application.ConsideredError
 
-
     def addNewRecords(self, excerciseID: int, records: List[Tuple[float, int]]) -> None:
         """Adds new record(s) to the table <records>"""
 
         SQL_COMMAND = """
-        INSERT INTO records (excercise_id, timestamp, weight, reps) VALUES (?, ?, ?, ?)
+        INSERT INTO records (excercise_id, timestamp, weight, reps) 
+        VALUES (?, ?, ?, ?)
         """
         for (
             weight,
@@ -311,7 +328,7 @@ class DataManager:
                 name TEXT NOT NULL,
                 description TEXT NOT NULL,
                 UNIQUE(name, description)
-            )
+                )
         """
         self.cursor.execute(SQL_COMMAND)
 
@@ -338,14 +355,19 @@ class DataManager:
 
         excercises: Dict = jsonload(open(self.relativeExcercisePath))
 
-        SQL_COMMAND = (
-            "INSERT OR IGNORE INTO excercises (name, description) VALUES (?, ?)"
-        )
+        SQL_COMMAND = """
+            INSERT OR IGNORE INTO excercises (name, description)
+            VALUES (?, ?)
+        """
 
         for name, description in excercises.items():
             self.cursor.execute(SQL_COMMAND, (name, description))
 
         self.connection.commit()
+
+    def backupLocal(self) -> None:
+        copyfile(self.relativeDatabasePath, f"backups/backup.sqlite3")
+
 
     def shutdownDB(self) -> None:
         self.cursor.close()
