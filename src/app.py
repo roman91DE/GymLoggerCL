@@ -42,7 +42,7 @@ class Application:
         MainMenuSelection.ADD_RECORD: lambda app: app.add_record(),
         MainMenuSelection.LIST_RECORDS: lambda app: app.list_records(),
         MainMenuSelection.EXPORT_RECORDS: lambda app: app.export_records(),
-        MainMenuSelection.BACKUP_REMOTE : lambda app: app.backup_to_remote(),
+        MainMenuSelection.BACKUP_REMOTE: lambda app: app.backup_to_remote(),
         MainMenuSelection.QUIT: lambda app: None,
     }
 
@@ -140,7 +140,7 @@ All available Excercises:
 
             RECORDS.append((WEIGHT, int(REPS)))
             counter += 1
-            
+
         if len(RECORDS) < 1:
             print("Warning: Aborted Operation for empty Record")
             return
@@ -252,8 +252,13 @@ class DataManager:
         SQL_COMMAND = """
         INSERT INTO records (excercise_id, timestamp, weight, reps) VALUES (?, ?, ?, ?)
         """
-        for (weight, reps) in records:                  # single record: Tuple["weight":float, "reps": int]
-            self.cursor.execute(SQL_COMMAND, (excerciseID, datetime.now(), str(weight), str(reps)))
+        for (
+            weight,
+            reps,
+        ) in records:  # single record: Tuple["weight":float, "reps": int]
+            self.cursor.execute(
+                SQL_COMMAND, (excerciseID, datetime.now(), str(weight), str(reps))
+            )
 
         self.connection.commit()
 
