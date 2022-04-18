@@ -243,11 +243,9 @@ class DataManager:
             )
             raise Application.ConsideredError
 
-    SQL_COMMAND = """
-    
-    """
 
     def addNewRecords(self, excerciseID: int, records: List[Tuple[float, int]]) -> None:
+        """Adds new record(s) to the table <records>"""
 
         SQL_COMMAND = """
         INSERT INTO records (excercise_id, timestamp, weight, reps) VALUES (?, ?, ?, ?)
