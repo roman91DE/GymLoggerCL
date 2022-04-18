@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from posixpath import split
 import sqlite3
 from os import listdir, makedirs
 from os.path import exists
@@ -10,6 +9,7 @@ from typing import Dict, Tuple, List
 from json import load as jsonload
 from time import sleep
 from datetime import datetime
+import traceback
 
 
 class Application:
@@ -124,9 +124,12 @@ All available Excercises:
         counter: int = 1
         buffer: str = ""
 
-        while buffer != "q":
-            print(f"Set {counter}, enter <q> to finish:")
-            buffer = input("WEIGHT REPS =  ")
+        while True:
+            print(f"\nSet #{counter}, type q[uit] to finish the excercise:")
+            buffer = input("Enter WEIGHT REPS:  ")
+
+            if buffer[0].lower() == "q":
+                break
 
             try:
                 WEIGHT, REPS = map(float, buffer.split())
@@ -136,14 +139,15 @@ All available Excercises:
 
             RECORDS.append((WEIGHT, int(REPS)))
             counter += 1
-
+            
         if len(RECORDS) < 1:
             print("Warning: Aborted Operation for empty Record")
             return
 
-        self.dataManager.addNewRecord(EXCERCISE_ID, RECORDS)
+        self.dataManager.addNewRecords(EXCERCISE_ID, RECORDS)
 
     def __select_excercise(self) -> int:
+        self.list_excercises()
         try:
             return int(input("Select Excercise by its number: "))
         except ValueError:
@@ -151,8 +155,6 @@ All available Excercises:
                 f"Error: Invalid Input, please select excercise by its integer index:"
             )
             return self.__select_excercise()
-
-    print("Not implemented yet...")
 
     def list_records(self) -> None:
         print("Not implemented yet...")
@@ -223,7 +225,7 @@ class DataManager:
             raise Application.ConsideredError
 
     def addNewExcercise(self, name: str, description: str) -> None:
-        """Add a new excercise to the database"""
+        """Insert new record for <name> to the table <excercise>"""
 
         SQL_COMMAND = """
         INSERT INTO excercises (name, description) VALUES (?, ?)
@@ -240,8 +242,21 @@ class DataManager:
             )
             raise Application.ConsideredError
 
-    def addNewRecord(self, excerciseID: int, records: List[Tuple[float, int]]) -> None:
-        TIMESTAMP = datetime.now()
+    SQL_COMMAND = """
+    
+    """
+
+    def addNewRecords(self, excerciseID: int, records: List[Tuple[float, int]]) -> None:
+
+        SQL_COMMAND = """
+        INSERT INTO records (excercise_id, timestamp, weight, reps) VALUES (?, ?, ?, ?)
+        """
+        for record in records:
+            sweight = str(record[0])    # weight as string
+            sreps = str(record[1])        # reps as string
+            self.cursor.execute(SQL_COMMAND, (excerciseID, datetime.now(), sweight, sreps))
+
+        self.connection.commit()
 
     def __databaseExists(self) -> bool:
         """Check if an valid sqlite database exists at relativeDatabasePath"""
@@ -273,7 +288,17 @@ class DataManager:
                 UNIQUE(name, description)
             )
         """
+        self.cursor.execute(SQL_COMMAND)
 
+        SQL_COMMAND = """
+        CREATE TABLE IF NOT EXISTS records(
+                excercise_id NOT NULL,
+                timestamp TEXT NOT NULL,
+                weight FLOAT NOT NULL,
+                reps INT NOT NULL,
+                PRIMARY KEY (excercise_id, timestamp)
+                )
+        """
         self.cursor.execute(SQL_COMMAND)
         self.connection.commit()
 
@@ -304,7 +329,6 @@ class DataManager:
 
 if __name__ == "__main__":
 
-    Application()
     try:
         Application()
 
@@ -313,9 +337,11 @@ if __name__ == "__main__":
             f"Error - Main Application was shutdown!\nError: {Err.with_traceback}",
             file=stderr,
         )
+        traceback.print_exc()
 
     except Exception as UnknownError:
         print(
             f"Error - Something unexpected went wrong! Error: {UnknownError}\n{UnknownError.with_traceback}",
             file=stderr,
         )
+        traceback.print_exc()
