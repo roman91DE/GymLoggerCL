@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import imp
+from posixpath import split
 import sqlite3
 from os import listdir, makedirs
 from os.path import exists
@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Dict, Tuple, List
 from json import load as jsonload
 from time import sleep
-from pprint import pprint
+from datetime import datetime
 
 
 class Application:
@@ -117,18 +117,41 @@ All available Excercises:
 
         self.dataManager.addNewExcercise(NAME, DESCRIPTION)
 
-
     def add_record(self) -> None:
-        EXCERCISE_ID = self.__select_excercise()
-        DATE_STR = 
+        EXCERCISE_ID: int = self.__select_excercise()
+        RECORDS: List[Tuple[float, int]] = []
+
+        counter: int = 1
+        buffer: str = ""
+
+        while buffer != "q":
+            print(f"Set {counter}, enter <q> to finish:")
+            buffer = input("WEIGHT REPS =  ")
+
+            try:
+                WEIGHT, REPS = map(float, buffer.split())
+            except ValueError:
+                print(f"Error: Invalid Input, please try again!")
+                continue
+
+            RECORDS.append((WEIGHT, int(REPS)))
+            counter += 1
+
+        if len(RECORDS) < 1:
+            print("Warning: Aborted Operation for empty Record")
+            return
+
+        self.dataManager.addNewRecord(EXCERCISE_ID, RECORDS)
 
     def __select_excercise(self) -> int:
         try:
-            return int(input("Select Excercise by its number: ")) 
+            return int(input("Select Excercise by its number: "))
         except ValueError:
-            print(f"Error: Invalid Input, please select excercise by its integer index:")
+            print(
+                f"Error: Invalid Input, please select excercise by its integer index:"
+            )
             return self.__select_excercise()
-    
+
     print("Not implemented yet...")
 
     def list_records(self) -> None:
@@ -205,7 +228,7 @@ class DataManager:
         SQL_COMMAND = """
         INSERT INTO excercises (name, description) VALUES (?, ?)
         """
-        
+
         try:
             self.cursor.execute(SQL_COMMAND, (name, description))
             self.connection.commit()
@@ -216,6 +239,9 @@ class DataManager:
                 file=stderr,
             )
             raise Application.ConsideredError
+
+    def addNewRecord(self, excerciseID: int, records: List[Tuple[float, int]]) -> None:
+        TIMESTAMP = datetime.now()
 
     def __databaseExists(self) -> bool:
         """Check if an valid sqlite database exists at relativeDatabasePath"""
@@ -270,7 +296,7 @@ class DataManager:
             self.cursor.execute(SQL_COMMAND, (name, description))
 
         self.connection.commit()
-    
+
     def shutdownDB(self) -> None:
         self.cursor.close()
         self.connection.close()
@@ -283,7 +309,10 @@ if __name__ == "__main__":
         Application()
 
     except Application.ConsideredError as Err:
-        print(f"Error - Main Application was shutdown!\nError: {Err.with_traceback}", file=stderr)
+        print(
+            f"Error - Main Application was shutdown!\nError: {Err.with_traceback}",
+            file=stderr,
+        )
 
     except Exception as UnknownError:
         print(
